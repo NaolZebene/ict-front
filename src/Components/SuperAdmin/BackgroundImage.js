@@ -1,0 +1,88 @@
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import EmpAuthContext from "../Store/Emp-authContext";
+
+function BackgroundImage() {
+  const empAuthCtx = useContext(EmpAuthContext);
+
+  const navigate = useNavigate();
+
+  const [backImage, setBackImage] = useState(null);
+
+  const [isPending, setIsPending] = useState(false)
+  const [errMsg, setErrMsg] = useState("");
+
+  const submitHandler = (e) => {
+    e.preventDefault();
+
+    setIsPending(true)
+
+    const formData = new FormData();
+    formData.append("backimg", backImage);
+
+    const addreport = async () => {
+      const response = await fetch("http://localhost:8080/home/createbackground/create", {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: "Bearer " + empAuthCtx.token,
+        },
+      });
+
+      if (!response.ok) {
+        console.log("something is wrong");
+      }
+
+      const data = await response.json();
+      console.log(data);
+
+      setIsPending(false)
+      setErrMsg(data.msg);
+
+      if (data.msg === "Background Posted Successfully") {
+        navigate("/superadmin/addimage");
+      } else if (data.msg === "Background Changed Successfully" ) {
+        navigate("/superadmin/addimage");
+      }
+    };
+
+    addreport();
+  };
+
+  return (
+    <>
+      <div className="bg-neutral-50">
+        <div className="m-auto py-16 min-h-screen flex items-center justify-center">
+          <div className="w-1/2">
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-5 mb-20">
+              <div className="text-lg text-center text-blue-500 font-bold">
+                Add Background Image
+              </div>
+              <form onSubmit={submitHandler}>
+
+                <div className="text-xl font-bold text-blue-500 my-3">
+                  <h4 className="mb-2">Background Image</h4>
+                  <input
+                    name="backimg"
+                    onChange={(e) => setBackImage(e.target.files[0])}
+                    type="file"
+                    className="w-full bg-white border border-blue-300 text-gray-900 text-lg rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+                  />
+                </div>
+
+                <p className="text-red-500 text-lg">{errMsg}</p>
+
+                <div className="w-44 items-center text-center text-blue-500 rounded-lg hover:bg-blue-400 my-5 hover:text-white p-2 text-xl font-bold cursor-pointer tracking-wider border">
+                 {!isPending && <button> Submit</button> }
+                 {isPending && <button disabled> Submiting</button> }
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default BackgroundImage;
